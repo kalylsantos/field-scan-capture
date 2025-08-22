@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhotoList } from '@/components/PhotoList';
 import { PhotoRecord } from '@/types/scanner';
-import { Camera, QrCode, Home } from 'lucide-react';
+import { Camera, QrCode, Home, Keyboard } from 'lucide-react';
 
 interface WorkScreenProps {
   barcode: string;
   photos: PhotoRecord[];
   onTakePhoto: () => void;
   onNewBarcode: () => void;
+  onManualEntry: () => void;
   onBackToMain: () => void;
   onRemovePhoto: (photoId: string) => void;
 }
@@ -19,6 +20,7 @@ export function WorkScreen({
   photos,
   onTakePhoto,
   onNewBarcode,
+  onManualEntry,
   onBackToMain,
   onRemovePhoto,
 }: WorkScreenProps) {
@@ -81,15 +83,26 @@ export function WorkScreen({
             Tirar Foto
           </Button>
           
-          <Button
-            variant="warning"
-            size="lg"
-            onClick={onNewBarcode}
-            className="w-full"
-          >
-            <QrCode className="h-5 w-5 mr-2" />
-            Novo Código
-          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="warning"
+              size="lg"
+              onClick={onNewBarcode}
+            >
+              <QrCode className="h-4 w-4 mr-1" />
+              Scanner
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={onManualEntry}
+              className="border-warning text-warning hover:bg-warning hover:text-white"
+            >
+              <Keyboard className="h-4 w-4 mr-1" />
+              Digitar
+            </Button>
+          </div>
           
           <Button
             variant="secondary"

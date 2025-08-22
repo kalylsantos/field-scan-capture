@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, History, Smartphone } from 'lucide-react';
+import { QrCode, History, Smartphone, Keyboard } from 'lucide-react';
 
 interface MainScreenProps {
   onStartScanner: () => void;
   onShowHistory: () => void;
+  onManualEntry: () => void;
 }
 
-export function MainScreen({ onStartScanner, onShowHistory }: MainScreenProps) {
+export function MainScreen({ onStartScanner, onShowHistory, onManualEntry }: MainScreenProps) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -44,6 +45,16 @@ export function MainScreen({ onStartScanner, onShowHistory }: MainScreenProps) {
               >
                 <QrCode className="h-5 w-5 mr-2" />
                 Escanear Código de Barras
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onManualEntry}
+                className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+              >
+                <Keyboard className="h-5 w-5 mr-2" />
+                Digitar Código Manualmente
               </Button>
               
               <Button

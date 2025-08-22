@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePhotoStorage } from '@/hooks/usePhotoStorage';
 import { BarcodeScanner } from './BarcodeScanner';
 import { PhotoCamera } from './PhotoCamera';
+import { ManualBarcodeInput } from './ManualBarcodeInput';
 import { MainScreen } from './screens/MainScreen';
 import { WorkScreen } from './screens/WorkScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
@@ -13,6 +14,7 @@ export function CampoScanner() {
   const [currentBarcode, setCurrentBarcode] = useState<string | null>(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showPhotoCamera, setShowPhotoCamera] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
   
   const {
     photos,
@@ -32,6 +34,17 @@ export function CampoScanner() {
     
     toast({
       title: "Código detectado!",
+      description: `Código: ${barcode}`,
+    });
+  };
+
+  const handleManualBarcodeEntered = (barcode: string) => {
+    setCurrentBarcode(barcode);
+    setCurrentScreen(APP_SCREENS.WORK);
+    setShowManualInput(false);
+    
+    toast({
+      title: "Código inserido!",
       description: `Código: ${barcode}`,
     });
   };
@@ -93,6 +106,7 @@ export function CampoScanner() {
         <MainScreen
           onStartScanner={() => setShowBarcodeScanner(true)}
           onShowHistory={() => setCurrentScreen(APP_SCREENS.HISTORY)}
+          onManualEntry={() => setShowManualInput(true)}
         />
       )}
 
@@ -102,6 +116,7 @@ export function CampoScanner() {
           photos={getCurrentPhotos()}
           onTakePhoto={() => setShowPhotoCamera(true)}
           onNewBarcode={() => setShowBarcodeScanner(true)}
+          onManualEntry={() => setShowManualInput(true)}
           onBackToMain={() => setCurrentScreen(APP_SCREENS.MAIN)}
           onRemovePhoto={handleRemovePhoto}
         />
@@ -129,6 +144,12 @@ export function CampoScanner() {
         onClose={() => setShowPhotoCamera(false)}
         onPhotoSaved={handlePhotoSaved}
         barcode={currentBarcode}
+      />
+
+      <ManualBarcodeInput
+        isOpen={showManualInput}
+        onClose={() => setShowManualInput(false)}
+        onBarcodeEntered={handleManualBarcodeEntered}
       />
     </>
   );
