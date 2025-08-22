@@ -1,3 +1,4 @@
+import React from 'react';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { CameraModal } from './CameraModal';
 import { Button } from '@/components/ui/button';
@@ -89,6 +90,3 @@ export function BarcodeScanner({ isOpen, onClose, onBarcodeDetected }: BarcodeSc
     </CameraModal>
   );
 }
-
-// Import React for useEffect
-import React from 'react';
