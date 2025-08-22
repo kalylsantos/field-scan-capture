@@ -195,4 +195,51 @@ All colors MUST be HSL.
   input[type="text"], input[type="number"] {
     font-size: 16px;
   }
+
+  /* Android-specific optimizations */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS Safari */
+    .camera-modal {
+      height: 100vh;
+      height: -webkit-fill-available;
+    }
+  }
+
+  /* Android Chrome optimizations */
+  @media screen and (max-width: 768px) {
+    body {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    /* Improve touch targets */
+    button, .button {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Optimize for Android keyboards */
+    .keyboard-adjust {
+      height: 100vh;
+      height: calc(100vh - env(keyboard-inset-height, 0px));
+    }
+  }
+
+  /* PWA display optimizations */
+  @media (display-mode: standalone) {
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .pwa-header {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+
+  /* Android status bar handling */
+  .android-status-bar {
+    padding-top: max(20px, env(safe-area-inset-top));
+  }
 }

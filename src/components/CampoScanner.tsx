@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { usePhotoStorage } from '@/hooks/usePhotoStorage';
+import { useAndroidPhotoStorage } from '@/hooks/useAndroidPhotoStorage';
 import { BarcodeScanner } from './BarcodeScanner';
 import { PhotoCamera } from './PhotoCamera';
 import { ManualBarcodeInput } from './ManualBarcodeInput';
@@ -24,7 +24,8 @@ export function CampoScanner() {
     clearAllPhotos,
     exportData,
     downloadPhoto,
-  } = usePhotoStorage();
+    storageInfo,
+  } = useAndroidPhotoStorage();
   
   const { toast } = useToast();
 
@@ -140,6 +141,7 @@ export function CampoScanner() {
           onBackToMain={() => setCurrentScreen(APP_SCREENS.MAIN)}
           onRemovePhoto={handleRemovePhoto}
           onDownloadPhoto={downloadPhoto}
+          storageInfo={storageInfo}
         />
       )}
 

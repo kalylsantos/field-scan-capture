@@ -22,9 +22,9 @@ export function CameraModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden camera-modal">
       {/* Header */}
-      <div className="bg-black/80 backdrop-blur-sm text-white p-4 flex items-center justify-between shrink-0 safe-area-inset-top">
+      <div className="bg-black/80 backdrop-blur-sm text-white p-4 flex items-center justify-between shrink-0 safe-area-inset-top android-status-bar">
         <div className="flex-1 text-center">
           <h2 className="text-lg font-bold">{title}</h2>
           {subtitle && <p className="text-sm text-white/80">{subtitle}</p>}
@@ -46,7 +46,7 @@ export function CameraModal({
 
       {/* Controls - Fixed at bottom with safe area */}
       {controls && (
-        <div className="bg-black/80 backdrop-blur-sm p-4 flex justify-center items-center gap-4 shrink-0 safe-area-inset-bottom min-h-[80px]">
+        <div className="bg-black/80 backdrop-blur-sm p-4 flex justify-center items-center gap-4 shrink-0 safe-area-inset-bottom min-h-[80px] camera-controls-fixed">
           {controls}
         </div>
       )}

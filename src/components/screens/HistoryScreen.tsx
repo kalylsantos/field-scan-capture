@@ -2,7 +2,7 @@ import { PhotoRecord } from '@/types/scanner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhotoList } from '@/components/PhotoList';
-import { Download, Trash2, Home } from 'lucide-react';
+import { Download, Trash2, Home, HardDrive } from 'lucide-react';
 
 interface HistoryScreenProps {
   photos: PhotoRecord[];
@@ -11,6 +11,7 @@ interface HistoryScreenProps {
   onBackToMain: () => void;
   onRemovePhoto: (photoId: string) => void;
   onDownloadPhoto?: (photo: PhotoRecord) => void;
+  storageInfo?: any;
 }
 
 export function HistoryScreen({
@@ -20,6 +21,7 @@ export function HistoryScreen({
   onBackToMain,
   onRemovePhoto,
   onDownloadPhoto,
+  storageInfo,
 }: HistoryScreenProps) {
   // Group photos by barcode
   const groupedPhotos = photos.reduce((acc, photo) => {
@@ -45,6 +47,11 @@ export function HistoryScreen({
             <CardTitle className="text-xl">Histórico de Fotos</CardTitle>
             <CardDescription className="text-white/90">
               {photos.length} foto{photos.length !== 1 ? 's' : ''} salva{photos.length !== 1 ? 's' : ''}
+              {storageInfo && (
+                <div className="text-xs mt-1 opacity-80">
+                  Armazenamento: {storageInfo.usagePercentage}% usado
+                </div>
+              )}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -84,6 +91,27 @@ export function HistoryScreen({
 
         {/* Actions */}
         <div className="space-y-3">
+          {storageInfo && (
+            <Card className="elegant-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <HardDrive className="h-4 w-4" />
+                  <span className="text-sm font-medium">Armazenamento</span>
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <div>Usado: {(storageInfo.usage / 1024 / 1024).toFixed(1)} MB</div>
+                  <div>Disponível: {storageInfo.available ? (storageInfo.available / 1024 / 1024).toFixed(1) + ' MB' : 'N/A'}</div>
+                  <div className="w-full bg-muted rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all" 
+                      style={{ width: `${Math.min(storageInfo.usagePercentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           <Button
             variant="default"
             size="lg"
