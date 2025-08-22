@@ -17,41 +17,55 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 258 75% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 234 89% 73%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 142 76% 36%;
+    --success-foreground: 355.7 100% 97.3%;
 
-    --radius: 0.5rem;
+    --warning: 32 95% 44%;
+    --warning-foreground: 210 40% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 258 75% 60%;
+
+    --radius: 0.75rem;
+
+    /* Campo Scanner Design System */
+    --gradient-primary: linear-gradient(135deg, hsl(234 89% 73%), hsl(258 75% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(142 76% 36%), hsl(120 76% 40%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(0 70% 50%));
+    --gradient-warning: linear-gradient(135deg, hsl(32 95% 44%), hsl(45 95% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(258 75% 60%) 0%, hsl(234 89% 73%) 100%);
+    
+    --shadow-elegant: 0 10px 25px -5px hsl(258 75% 60% / 0.1);
+    --shadow-glow: 0 0 30px hsl(234 89% 73% / 0.3);
+    --shadow-strong: 0 20px 40px -10px hsl(258 75% 60% / 0.2);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -65,8 +79,9 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 258 75% 65%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --primary-glow: 234 89% 78%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -80,9 +95,26 @@ All colors MUST be HSL.
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
+    --success: 142 76% 36%;
+    --success-foreground: 355.7 100% 97.3%;
+
+    --warning: 32 95% 44%;
+    --warning-foreground: 210 40% 98%;
+
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 258 75% 65%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(234 89% 78%), hsl(258 75% 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(142 76% 36%), hsl(120 76% 40%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 62% 31%), hsl(0 50% 25%));
+    --gradient-warning: linear-gradient(135deg, hsl(32 95% 44%), hsl(45 95% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(258 75% 65%) 0%, hsl(234 89% 78%) 100%);
+    
+    --shadow-elegant: 0 10px 25px -5px hsl(258 75% 65% / 0.2);
+    --shadow-glow: 0 0 30px hsl(234 89% 78% / 0.4);
+    --shadow-strong: 0 20px 40px -10px hsl(258 75% 65% / 0.3);
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +133,43 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background: var(--gradient-hero);
+    min-height: 100vh;
+  }
+
+  .scanner-gradient {
+    background: var(--gradient-primary);
+  }
+
+  .success-gradient {
+    background: var(--gradient-secondary);
+  }
+
+  .danger-gradient {
+    background: var(--gradient-danger);
+  }
+
+  .warning-gradient {
+    background: var(--gradient-warning);
+  }
+
+  .elegant-shadow {
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .glow-shadow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .strong-shadow {
+    box-shadow: var(--shadow-strong);
+  }
+
+  .smooth-transition {
+    transition: var(--transition-smooth);
+  }
+
+  .spring-transition {
+    transition: var(--transition-spring);
   }
 }

@@ -1,0 +1,135 @@
+import { useState } from 'react';
+import { usePhotoStorage } from '@/hooks/usePhotoStorage';
+import { BarcodeScanner } from './BarcodeScanner';
+import { PhotoCamera } from './PhotoCamera';
+import { MainScreen } from './screens/MainScreen';
+import { WorkScreen } from './screens/WorkScreen';
+import { HistoryScreen } from './screens/HistoryScreen';
+import { APP_SCREENS, AppScreenType } from '@/types/scanner';
+import { useToast } from '@/hooks/use-toast';
+
+export function CampoScanner() {
+  const [currentScreen, setCurrentScreen] = useState<AppScreenType>(APP_SCREENS.MAIN);
+  const [currentBarcode, setCurrentBarcode] = useState<string | null>(null);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showPhotoCamera, setShowPhotoCamera] = useState(false);
+  
+  const {
+    photos,
+    addPhoto,
+    removePhoto,
+    getPhotosByBarcode,
+    clearAllPhotos,
+    exportData,
+  } = usePhotoStorage();
+  
+  const { toast } = useToast();
+
+  const handleBarcodeDetected = (barcode: string) => {
+    setCurrentBarcode(barcode);
+    setCurrentScreen(APP_SCREENS.WORK);
+    setShowBarcodeScanner(false);
+    
+    toast({
+      title: "Código detectado!",
+      description: `Código: ${barcode}`,
+    });
+  };
+
+  const handlePhotoSaved = (imageData: string) => {
+    if (!currentBarcode) return;
+    
+    const photo = addPhoto(currentBarcode, imageData);
+    setShowPhotoCamera(false);
+    
+    toast({
+      title: "Foto salva!",
+      description: `Arquivo: ${photo.fileName}`,
+    });
+  };
+
+  const handleExportData = () => {
+    if (photos.length === 0) {
+      toast({
+        title: "Nenhuma foto para exportar",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    exportData();
+    toast({
+      title: "Dados exportados!",
+      description: "Arquivo JSON baixado com sucesso",
+    });
+  };
+
+  const handleClearHistory = () => {
+    clearAllPhotos();
+    toast({
+      title: "Histórico limpo!",
+      description: "Todas as fotos foram removidas",
+    });
+  };
+
+  const handleRemovePhoto = (photoId: string) => {
+    if (window.confirm('Tem certeza que deseja remover esta foto?')) {
+      removePhoto(photoId);
+      toast({
+        title: "Foto removida",
+        description: "A foto foi excluída do histórico",
+      });
+    }
+  };
+
+  const getCurrentPhotos = () => {
+    return currentBarcode ? getPhotosByBarcode(currentBarcode) : [];
+  };
+
+  return (
+    <>
+      {/* Main Screens */}
+      {currentScreen === APP_SCREENS.MAIN && (
+        <MainScreen
+          onStartScanner={() => setShowBarcodeScanner(true)}
+          onShowHistory={() => setCurrentScreen(APP_SCREENS.HISTORY)}
+        />
+      )}
+
+      {currentScreen === APP_SCREENS.WORK && currentBarcode && (
+        <WorkScreen
+          barcode={currentBarcode}
+          photos={getCurrentPhotos()}
+          onTakePhoto={() => setShowPhotoCamera(true)}
+          onNewBarcode={() => setShowBarcodeScanner(true)}
+          onBackToMain={() => setCurrentScreen(APP_SCREENS.MAIN)}
+          onRemovePhoto={handleRemovePhoto}
+        />
+      )}
+
+      {currentScreen === APP_SCREENS.HISTORY && (
+        <HistoryScreen
+          photos={photos}
+          onExportData={handleExportData}
+          onClearHistory={handleClearHistory}
+          onBackToMain={() => setCurrentScreen(APP_SCREENS.MAIN)}
+          onRemovePhoto={handleRemovePhoto}
+        />
+      )}
+
+      {/* Camera Modals */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onBarcodeDetected={handleBarcodeDetected}
+      />
+
+      <PhotoCamera
+        isOpen={showPhotoCamera}
+        onClose={() => setShowPhotoCamera(false)}
+        onPhotoSaved={handlePhotoSaved}
+        barcode={currentBarcode}
+      />
+    </>
+  );
+}
