@@ -10,6 +10,7 @@ interface HistoryScreenProps {
   onClearHistory: () => void;
   onBackToMain: () => void;
   onRemovePhoto: (photoId: string) => void;
+  onDownloadPhoto?: (photo: PhotoRecord) => void;
 }
 
 export function HistoryScreen({
@@ -18,6 +19,7 @@ export function HistoryScreen({
   onClearHistory,
   onBackToMain,
   onRemovePhoto,
+  onDownloadPhoto,
 }: HistoryScreenProps) {
   // Group photos by barcode
   const groupedPhotos = photos.reduce((acc, photo) => {
@@ -72,6 +74,7 @@ export function HistoryScreen({
                   <PhotoList
                     photos={barcodePhotos}
                     onRemovePhoto={onRemovePhoto}
+                    onDownloadPhoto={onDownloadPhoto}
                   />
                 </CardContent>
               </Card>

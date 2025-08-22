@@ -23,6 +23,7 @@ export function CampoScanner() {
     getPhotosByBarcode,
     clearAllPhotos,
     exportData,
+    downloadPhoto,
   } = usePhotoStorage();
   
   const { toast } = useToast();
@@ -49,16 +50,25 @@ export function CampoScanner() {
     });
   };
 
-  const handlePhotoSaved = (imageData: string) => {
+  const handlePhotoSaved = async (imageData: string) => {
     if (!currentBarcode) return;
     
-    const photo = addPhoto(currentBarcode, imageData);
-    setShowPhotoCamera(false);
-    
-    toast({
-      title: "Foto salva!",
-      description: `Arquivo: ${photo.fileName}`,
-    });
+    try {
+      const photo = await addPhoto(currentBarcode, imageData);
+      setShowPhotoCamera(false);
+      
+      toast({
+        title: "Foto salva!",
+        description: `Arquivo: ${photo.fileName}`,
+      });
+    } catch (error) {
+      console.error('Error saving photo:', error);
+      toast({
+        title: "Erro ao salvar foto",
+        description: "Tente novamente",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportData = () => {
@@ -129,6 +139,7 @@ export function CampoScanner() {
           onClearHistory={handleClearHistory}
           onBackToMain={() => setCurrentScreen(APP_SCREENS.MAIN)}
           onRemovePhoto={handleRemovePhoto}
+          onDownloadPhoto={downloadPhoto}
         />
       )}
 

@@ -1,14 +1,15 @@
 import { PhotoRecord } from '@/types/scanner';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Download } from 'lucide-react';
 
 interface PhotoListProps {
   photos: PhotoRecord[];
   onRemovePhoto: (photoId: string) => void;
+  onDownloadPhoto?: (photo: PhotoRecord) => void;
   emptyMessage?: string;
 }
 
-export function PhotoList({ photos, onRemovePhoto, emptyMessage = 'Nenhuma foto disponível' }: PhotoListProps) {
+export function PhotoList({ photos, onRemovePhoto, onDownloadPhoto, emptyMessage = 'Nenhuma foto disponível' }: PhotoListProps) {
   if (photos.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -39,13 +40,26 @@ export function PhotoList({ photos, onRemovePhoto, emptyMessage = 'Nenhuma foto 
             </p>
           </div>
           
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onRemovePhoto(photo.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            {onDownloadPhoto && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDownloadPhoto(photo)}
+                className="px-2"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onRemovePhoto(photo.id)}
+              className="px-2"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       ))}
     </div>

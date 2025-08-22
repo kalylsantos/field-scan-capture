@@ -22,9 +22,9 @@ export function CameraModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-black/80 backdrop-blur-sm text-white p-4 flex items-center justify-between">
+      <div className="bg-black/80 backdrop-blur-sm text-white p-4 flex items-center justify-between shrink-0 safe-area-inset-top">
         <div className="flex-1 text-center">
           <h2 className="text-lg font-bold">{title}</h2>
           {subtitle && <p className="text-sm text-white/80">{subtitle}</p>}
@@ -40,13 +40,13 @@ export function CameraModal({
       </div>
 
       {/* Content */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-0 overflow-hidden">
         {children}
       </div>
 
-      {/* Controls */}
+      {/* Controls - Fixed at bottom with safe area */}
       {controls && (
-        <div className="bg-black/80 backdrop-blur-sm p-6 flex justify-center gap-4">
+        <div className="bg-black/80 backdrop-blur-sm p-4 flex justify-center items-center gap-4 shrink-0 safe-area-inset-bottom min-h-[80px]">
           {controls}
         </div>
       )}

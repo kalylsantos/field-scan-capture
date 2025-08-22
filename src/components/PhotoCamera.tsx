@@ -107,11 +107,11 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
     if (capturedImage) {
       return (
         <>
-          <Button variant="warning" onClick={handleRetake}>
+          <Button variant="warning" onClick={handleRetake} size="lg">
             <RotateCcw className="h-5 w-5 mr-2" />
             Repetir
           </Button>
-          <Button variant="success" onClick={handleSave}>
+          <Button variant="success" onClick={handleSave} size="lg">
             <Save className="h-5 w-5 mr-2" />
             Salvar
           </Button>
@@ -121,17 +121,22 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
 
     return (
       <>
-        <Button variant="camera" onClick={handleClose}>
+        <Button 
+          variant="camera" 
+          onClick={handleClose}
+          size="lg"
+          className="px-6"
+        >
           Cancelar
         </Button>
         <Button
           variant="camera"
-          size="xl"
+          size="icon"
           onClick={handleCapture}
           disabled={!permissionState.hasPermission}
-          className="bg-white text-black hover:bg-white/90"
+          className="bg-white text-black hover:bg-white/90 w-16 h-16 rounded-full"
         >
-          <Camera className="h-6 w-6" />
+          <Camera className="h-8 w-8" />
         </Button>
       </>
     );
