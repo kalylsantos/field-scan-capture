@@ -15,7 +15,24 @@ export function useBarcodeScanner() {
   const streamRef = useRef<MediaStream | null>(null);
   const isInitializedRef = useRef(false);
   const lastDetectedRef = useRef<string | null>(null);
+  const detectionCountRef = useRef<number>(0);
   const detectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingRef = useRef(false);
+
+  const validateBarcode = (code: string): boolean => {
+    // More strict validation
+    if (!code || typeof code !== 'string') return false;
+    if (code.length < 6 || code.length > 50) return false;
+    
+    // Allow only alphanumeric, hyphens, underscores, dots, and forward slashes
+    if (!/^[0-9A-Za-z\-_\.\/]+$/.test(code)) return false;
+    
+    // Reject codes that are too repetitive (like "111111" or "AAAAAA")
+    const uniqueChars = new Set(code).size;
+    if (uniqueChars < 2 && code.length > 4) return false;
+    
+    return true;
+  };
 
   const startScanner = useCallback(async () => {
     try {
@@ -26,11 +43,20 @@ export function useBarcodeScanner() {
         currentBarcode: null
       }));
 
-      // Reset detection state
+      // Reset all detection state
       lastDetectedRef.current = null;
+      detectionCountRef.current = 0;
+      isProcessingRef.current = false;
+      
       if (detectionTimeoutRef.current) {
         clearTimeout(detectionTimeoutRef.current);
         detectionTimeoutRef.current = null;
+      }
+
+      // Stop any existing stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -38,7 +64,7 @@ export function useBarcodeScanner() {
           facingMode: 'environment',
           width: { ideal: 1280, max: 1920 },
           height: { ideal: 720, max: 1080 },
-          frameRate: { ideal: 15, max: 30 } // Lower frame rate for better stability
+          frameRate: { ideal: 10, max: 15 } // Lower frame rate for stability
         },
       });
 
@@ -55,7 +81,7 @@ export function useBarcodeScanner() {
         }
       });
 
-      // Initialize QuaggaJS with better settings
+      // Initialize QuaggaJS with more conservative settings
       Quagga.init({
         inputStream: {
           name: 'Live',
@@ -68,11 +94,11 @@ export function useBarcodeScanner() {
           },
         },
         locator: {
-          patchSize: 'medium',
-          halfSample: true,
+          patchSize: 'large', // Larger patch size for better accuracy
+          halfSample: false, // Don't downsample for better quality
         },
-        numOfWorkers: 1, // Reduce workers for better stability
-        frequency: 5, // Reduce scanning frequency
+        numOfWorkers: 1,
+        frequency: 3, // Even lower frequency to reduce false positives
         decoder: {
           readers: [
             'code_128_reader',
@@ -82,6 +108,7 @@ export function useBarcodeScanner() {
             'upc_reader',
             'upc_e_reader',
           ],
+          multiple: false, // Only detect one barcode at a time
         },
         locate: true,
       }, (err: any) => {
@@ -102,42 +129,60 @@ export function useBarcodeScanner() {
           feedback: 'Scanner ativo - posicione o código de barras' 
         }));
 
-        // Set up detection callback with debouncing
+        // Set up detection callback with improved debouncing
         Quagga.onDetected((data: any) => {
+          // Prevent processing if already processing
+          if (isProcessingRef.current) return;
+          
           const code = data.codeResult.code;
           
-          // Validate barcode (minimum length and basic format)
-          if (!code || code.length < 4 || !/^[0-9A-Za-z\-_\.\/]+$/.test(code)) {
+          // Validate barcode
+          if (!validateBarcode(code)) {
             return;
           }
 
-          // Debounce detection - only accept if same code detected multiple times
+          // Check confidence level if available
+          if (data.codeResult.confidence && data.codeResult.confidence < 80) {
+            return;
+          }
+
+          // Improved debouncing logic
           if (lastDetectedRef.current === code) {
-            // Same code detected again, accept it
-            if (detectionTimeoutRef.current) {
-              clearTimeout(detectionTimeoutRef.current);
+            detectionCountRef.current++;
+            
+            // Require at least 3 consistent detections
+            if (detectionCountRef.current >= 3) {
+              isProcessingRef.current = true;
+              
+              setScannerState(prev => ({ 
+                ...prev, 
+                currentBarcode: code,
+                feedback: `Código detectado: ${code}` 
+              }));
+              
+              // Stop scanner immediately to prevent further detections
+              setTimeout(() => {
+                if (isInitializedRef.current) {
+                  Quagga.stop();
+                  isInitializedRef.current = false;
+                }
+              }, 100);
             }
-            
-            setScannerState(prev => ({ 
-              ...prev, 
-              currentBarcode: code,
-              feedback: `Código detectado: ${code}` 
-            }));
-            
-            // Stop further detections for a moment
-            Quagga.stop();
-            isInitializedRef.current = false;
           } else {
-            // New code, wait for confirmation
+            // New code detected, reset counter
             lastDetectedRef.current = code;
+            detectionCountRef.current = 1;
             
+            // Clear any existing timeout
             if (detectionTimeoutRef.current) {
               clearTimeout(detectionTimeoutRef.current);
             }
             
+            // Reset detection after 2 seconds if not confirmed
             detectionTimeoutRef.current = setTimeout(() => {
               lastDetectedRef.current = null;
-            }, 1000); // Reset after 1 second
+              detectionCountRef.current = 0;
+            }, 2000);
           }
         });
       });
@@ -171,8 +216,11 @@ export function useBarcodeScanner() {
       videoRef.current.srcObject = null;
     }
 
-    // Clear detection state
+    // Clear all detection state
     lastDetectedRef.current = null;
+    detectionCountRef.current = 0;
+    isProcessingRef.current = false;
+    
     if (detectionTimeoutRef.current) {
       clearTimeout(detectionTimeoutRef.current);
       detectionTimeoutRef.current = null;
