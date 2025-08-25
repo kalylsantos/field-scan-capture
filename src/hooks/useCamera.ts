@@ -14,6 +14,12 @@ export function useCamera() {
   const requestCameraPermission = useCallback(async (facingMode: 'user' | 'environment' = 'environment') => {
     setPermissionState(prev => ({ ...prev, isRequesting: true, error: null }));
 
+    // Stop any existing stream first
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -28,6 +34,13 @@ export function useCamera() {
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        
+        // Wait for video to be ready
+        await new Promise((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = resolve;
+          }
+        });
       }
 
       setPermissionState({
@@ -49,6 +62,8 @@ export function useCamera() {
           errorMessage = 'Nenhuma câmera encontrada no dispositivo.';
         } else if (error.name === 'NotSupportedError') {
           errorMessage = 'Câmera não suportada neste dispositivo.';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage = 'Câmera está sendo usada por outro aplicativo.';
         }
       }
 
@@ -60,17 +75,24 @@ export function useCamera() {
 
       throw error;
     }
-  }, []);
+  }, [stream]);
 
   const stopCamera = useCallback(() => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
       setStream(null);
     }
     
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+
+    setPermissionState(prev => ({
+      ...prev,
+      hasPermission: null,
+    }));
   }, [stream]);
 
   const capturePhoto = useCallback(() => {
@@ -81,12 +103,22 @@ export function useCamera() {
     
     if (!context) return null;
 
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    // Ensure video dimensions are available
+    const videoWidth = videoRef.current.videoWidth;
+    const videoHeight = videoRef.current.videoHeight;
     
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    if (videoWidth === 0 || videoHeight === 0) {
+      console.error('Video dimensions not available');
+      return null;
+    }
+
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
     
-    return canvas.toDataURL('image/jpeg', 0.8);
+    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+    
+    // Use higher quality for better image output
+    return canvas.toDataURL('image/jpeg', 0.92);
   }, [stream]);
 
   return {

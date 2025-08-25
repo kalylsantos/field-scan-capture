@@ -14,6 +14,7 @@ interface PhotoCameraProps {
 export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCameraProps) {
   const { permissionState, videoRef, requestCameraPermission, stopCamera, capturePhoto } = useCamera();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleOpen = async () => {
@@ -29,34 +30,55 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
   const handleClose = () => {
     stopCamera();
     setCapturedImage(null);
+    setIsCapturing(false);
     onClose();
   };
 
-  const handleCapture = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  const handleCapture = async () => {
+    if (!videoRef.current || !canvasRef.current || isCapturing) return;
 
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    if (!context) return;
+    setIsCapturing(true);
+    
+    try {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      if (!context) return;
 
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    
-    // Draw video frame
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    
-    // Add overlay with information
-    addOverlayToCanvas(context, canvas.width, canvas.height);
-    
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    setCapturedImage(imageData);
+      // Get video dimensions
+      const videoWidth = videoRef.current.videoWidth;
+      const videoHeight = videoRef.current.videoHeight;
+      
+      if (videoWidth === 0 || videoHeight === 0) {
+        console.error('Video not ready');
+        return;
+      }
+
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
+      
+      // Draw video frame
+      context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+      
+      // Add overlay with information
+      addOverlayToCanvas(context, videoWidth, videoHeight);
+      
+      // Convert to high-quality JPEG
+      const imageData = canvas.toDataURL('image/jpeg', 0.92);
+      setCapturedImage(imageData);
+      
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+    } finally {
+      setIsCapturing(false);
+    }
   };
 
   const addOverlayToCanvas = (context: CanvasRenderingContext2D, width: number, height: number) => {
     const now = new Date();
     
-    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    context.font = 'bold 16px Arial';
+    // Set up text styling
+    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    context.font = `${Math.max(16, width * 0.02)}px Arial`;
     context.textAlign = 'right';
     
     const info = [
@@ -65,16 +87,19 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
       `Código: ${barcode || 'N/A'}`,
     ];
     
-    const lineHeight = 22;
-    const padding = 12;
-    const backgroundWidth = 220;
+    const fontSize = Math.max(16, width * 0.02);
+    const lineHeight = fontSize * 1.4;
+    const padding = Math.max(12, width * 0.01);
+    const backgroundWidth = Math.max(220, width * 0.25);
     const backgroundHeight = info.length * lineHeight + padding * 2;
     
-    const x = width - backgroundWidth - 15;
-    const y = height - backgroundHeight - 15;
+    const x = width - backgroundWidth - Math.max(15, width * 0.01);
+    const y = height - backgroundHeight - Math.max(15, height * 0.02);
     
+    // Draw background
     context.fillRect(x, y, backgroundWidth, backgroundHeight);
     
+    // Draw text
     context.fillStyle = 'white';
     info.forEach((line, index) => {
       const textY = y + padding + (index + 1) * lineHeight;
@@ -84,6 +109,7 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
 
   const handleRetake = () => {
     setCapturedImage(null);
+    setIsCapturing(false);
   };
 
   const handleSave = () => {
@@ -100,6 +126,7 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
     } else {
       stopCamera();
       setCapturedImage(null);
+      setIsCapturing(false);
     }
   }, [isOpen]);
 
@@ -133,8 +160,8 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
           variant="camera"
           size="icon"
           onClick={handleCapture}
-          disabled={!permissionState.hasPermission}
-          className="bg-white text-black hover:bg-white/90 w-16 h-16 rounded-full"
+          disabled={!permissionState.hasPermission || isCapturing}
+          className="bg-white text-black hover:bg-white/90 w-16 h-16 rounded-full disabled:opacity-50"
         >
           <Camera className="h-8 w-8" />
         </Button>
@@ -180,6 +207,7 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
             muted
             playsInline
             className="w-full h-full object-cover"
+            style={{ transform: 'scaleX(-1)' }} // Mirror for better UX
           />
           
           {/* Camera overlay with information */}
@@ -188,6 +216,13 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
             <div>Hora: {new Date().toLocaleTimeString('pt-BR')}</div>
             <div>Código: {barcode || 'N/A'}</div>
           </div>
+
+          {/* Loading indicator when capturing */}
+          {isCapturing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="text-white text-lg">Capturando...</div>
+            </div>
+          )}
         </>
       )}
 

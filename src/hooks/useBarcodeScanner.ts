@@ -14,20 +14,31 @@ export function useBarcodeScanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const isInitializedRef = useRef(false);
+  const lastDetectedRef = useRef<string | null>(null);
+  const detectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const startScanner = useCallback(async () => {
     try {
       setScannerState(prev => ({ 
         ...prev, 
         isScanning: true, 
-        feedback: 'Iniciando câmera...' 
+        feedback: 'Iniciando câmera...',
+        currentBarcode: null
       }));
+
+      // Reset detection state
+      lastDetectedRef.current = null;
+      if (detectionTimeoutRef.current) {
+        clearTimeout(detectionTimeoutRef.current);
+        detectionTimeoutRef.current = null;
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 15, max: 30 } // Lower frame rate for better stability
         },
       });
 
@@ -44,7 +55,7 @@ export function useBarcodeScanner() {
         }
       });
 
-      // Initialize QuaggaJS
+      // Initialize QuaggaJS with better settings
       Quagga.init({
         inputStream: {
           name: 'Live',
@@ -60,18 +71,16 @@ export function useBarcodeScanner() {
           patchSize: 'medium',
           halfSample: true,
         },
-        numOfWorkers: 2,
+        numOfWorkers: 1, // Reduce workers for better stability
+        frequency: 5, // Reduce scanning frequency
         decoder: {
           readers: [
             'code_128_reader',
             'ean_reader',
             'ean_8_reader',
             'code_39_reader',
-            'code_39_vin_reader',
-            'codabar_reader',
             'upc_reader',
             'upc_e_reader',
-            'i2of5_reader',
           ],
         },
         locate: true,
@@ -93,15 +102,42 @@ export function useBarcodeScanner() {
           feedback: 'Scanner ativo - posicione o código de barras' 
         }));
 
-        // Set up detection callback
+        // Set up detection callback with debouncing
         Quagga.onDetected((data: any) => {
           const code = data.codeResult.code;
-          if (code && code.length > 0) {
+          
+          // Validate barcode (minimum length and basic format)
+          if (!code || code.length < 4 || !/^[0-9A-Za-z\-_\.\/]+$/.test(code)) {
+            return;
+          }
+
+          // Debounce detection - only accept if same code detected multiple times
+          if (lastDetectedRef.current === code) {
+            // Same code detected again, accept it
+            if (detectionTimeoutRef.current) {
+              clearTimeout(detectionTimeoutRef.current);
+            }
+            
             setScannerState(prev => ({ 
               ...prev, 
               currentBarcode: code,
               feedback: `Código detectado: ${code}` 
             }));
+            
+            // Stop further detections for a moment
+            Quagga.stop();
+            isInitializedRef.current = false;
+          } else {
+            // New code, wait for confirmation
+            lastDetectedRef.current = code;
+            
+            if (detectionTimeoutRef.current) {
+              clearTimeout(detectionTimeoutRef.current);
+            }
+            
+            detectionTimeoutRef.current = setTimeout(() => {
+              lastDetectedRef.current = null;
+            }, 1000); // Reset after 1 second
           }
         });
       });
@@ -133,6 +169,13 @@ export function useBarcodeScanner() {
 
     if (videoRef.current) {
       videoRef.current.srcObject = null;
+    }
+
+    // Clear detection state
+    lastDetectedRef.current = null;
+    if (detectionTimeoutRef.current) {
+      clearTimeout(detectionTimeoutRef.current);
+      detectionTimeoutRef.current = null;
     }
 
     setScannerState({
