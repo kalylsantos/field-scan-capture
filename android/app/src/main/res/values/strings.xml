@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">field-scan-capture</string>
+    <string name="title_activity_main">field-scan-capture</string>
+    <string name="package_name">com.lovable.app</string>
+    <string name="custom_url_scheme">com.lovable.app</string>
+</resources>
