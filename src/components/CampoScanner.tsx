@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAndroidPhotoStorage } from '@/hooks/useAndroidPhotoStorage';
+import { useNativePhotoStorage } from '@/hooks/useNativePhotoStorage';
 import { BarcodeScanner } from './BarcodeScanner';
 import { PhotoCamera } from './PhotoCamera';
 import { ManualBarcodeInput } from './ManualBarcodeInput';
@@ -25,7 +25,8 @@ export function CampoScanner() {
     exportData,
     downloadPhoto,
     storageInfo,
-  } = useAndroidPhotoStorage();
+    isNative,
+  } = useNativePhotoStorage();
   
   const { toast } = useToast();
 

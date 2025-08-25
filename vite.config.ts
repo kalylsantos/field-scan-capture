@@ -8,7 +8,6 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    https: mode === 'development' ? false : true, // HTTPS for PWA features
   },
   plugins: [
     react(),
