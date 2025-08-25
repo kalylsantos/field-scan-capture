@@ -25,9 +25,9 @@ export function useNativePhotoStorage() {
         const storedPhotos = await nativeStorage.getAllPhotos();
         setPhotos(storedPhotos);
       } else {
-        // Use fallback storage for web
+        // Use fallback storage for web - wait for it to load first
         await fallbackStorage.loadPhotos();
-        setPhotos(fallbackStorage.photos);
+        // Don't set photos here, use the return value from fallbackStorage
       }
     } catch (error) {
       console.error('Error loading photos:', error);
@@ -57,7 +57,9 @@ export function useNativePhotoStorage() {
         loadStorageInfo();
         return photo;
       } else {
-        return await fallbackStorage.addPhoto(barcode, imageData);
+        const photo = await fallbackStorage.addPhoto(barcode, imageData);
+        await loadPhotos(); // Reload to get updated photos
+        return photo;
       }
     } catch (error) {
       console.error('Error saving photo:', error);
@@ -76,7 +78,7 @@ export function useNativePhotoStorage() {
         }
       } else {
         await fallbackStorage.removePhoto(photoId);
-        setPhotos(fallbackStorage.photos);
+        await loadPhotos(); // Reload to get updated photos
       }
     } catch (error) {
       console.error('Error removing photo:', error);
@@ -96,7 +98,7 @@ export function useNativePhotoStorage() {
         loadStorageInfo();
       } else {
         await fallbackStorage.clearAllPhotos();
-        setPhotos([]);
+        await loadPhotos(); // Reload to get updated photos
       }
     } catch (error) {
       console.error('Error clearing photos:', error);
