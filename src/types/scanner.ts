@@ -5,6 +5,7 @@ export interface PhotoRecord {
   timestamp: string;
   fileName: string;
   filePath?: string; // For native file system paths
+  fileSize?: number; // For storage calculations
 }
 
 export interface CameraPermissionState {
