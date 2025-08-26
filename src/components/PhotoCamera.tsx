@@ -39,14 +39,14 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
       if (isNative) {
         // Use Capacitor Camera for native apps
         const image = await Camera.getPhoto({
-          quality: 90,
+          quality: 95,
           allowEditing: false,
           resultType: CameraResultType.DataUrl,
           source: CameraSource.Camera,
-          saveToGallery: false, // Don't save to gallery automatically to avoid corruption
+          saveToGallery: false,
           correctOrientation: true,
-          width: 1920,
-          height: 1080,
+          width: 1280,
+          height: 720,
         });
 
         if (image.dataUrl) {
