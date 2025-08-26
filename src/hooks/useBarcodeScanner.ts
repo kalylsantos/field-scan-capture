@@ -20,16 +20,23 @@ export function useBarcodeScanner() {
   const isProcessingRef = useRef(false);
 
   const validateBarcode = (code: string): boolean => {
-    // More strict validation
+    // Enhanced validation for Android compatibility
     if (!code || typeof code !== 'string') return false;
     if (code.length < 6 || code.length > 50) return false;
     
-    // Allow only alphanumeric, hyphens, underscores, dots, and forward slashes
-    if (!/^[0-9A-Za-z\-_\.\/]+$/.test(code)) return false;
+    // Stricter pattern - must start with digit and contain meaningful content
+    if (!/^[0-9][0-9A-Za-z\-_\.\/]+$/.test(code)) return false;
     
-    // Reject codes that are too repetitive (like "111111" or "AAAAAA")
+    // Reject codes that are too repetitive or sequential
     const uniqueChars = new Set(code).size;
-    if (uniqueChars < 2 && code.length > 4) return false;
+    if (uniqueChars < 3 && code.length > 6) return false;
+    
+    // Reject obvious sequential patterns (123456, 111111, etc.)
+    const isSequential = /^(\d)\1{5,}$|^123456|^654321|^abcdef/i.test(code);
+    if (isSequential) return false;
+    
+    // Reject codes with too many consecutive identical characters
+    if (/(.)\1{4,}/.test(code)) return false;
     
     return true;
   };
@@ -98,7 +105,7 @@ export function useBarcodeScanner() {
           halfSample: false, // Don't downsample for better quality
         },
         numOfWorkers: 1,
-        frequency: 3, // Even lower frequency to reduce false positives
+        frequency: 2, // Lower frequency for Android stability
         decoder: {
           readers: [
             'code_128_reader',
@@ -109,6 +116,12 @@ export function useBarcodeScanner() {
             'upc_e_reader',
           ],
           multiple: false, // Only detect one barcode at a time
+          debug: {
+            drawBoundingBox: false,
+            showFrequency: false,
+            drawScanline: false,
+            showPattern: false
+          }
         },
         locate: true,
       }, (err: any) => {
@@ -146,12 +159,12 @@ export function useBarcodeScanner() {
             return;
           }
 
-          // Improved debouncing logic
+          // Enhanced debouncing logic for Android compatibility
           if (lastDetectedRef.current === code) {
             detectionCountRef.current++;
             
-            // Require at least 3 consistent detections
-            if (detectionCountRef.current >= 3) {
+            // Require 5 consistent detections for Android stability
+            if (detectionCountRef.current >= 5) {
               isProcessingRef.current = true;
               
               setScannerState(prev => ({ 
@@ -166,7 +179,7 @@ export function useBarcodeScanner() {
                   Quagga.stop();
                   isInitializedRef.current = false;
                 }
-              }, 100);
+              }, 200);
             }
           } else {
             // New code detected, reset counter
@@ -178,11 +191,11 @@ export function useBarcodeScanner() {
               clearTimeout(detectionTimeoutRef.current);
             }
             
-            // Reset detection after 2 seconds if not confirmed
+            // Reset detection after 3 seconds for more stable detection
             detectionTimeoutRef.current = setTimeout(() => {
               lastDetectedRef.current = null;
               detectionCountRef.current = 0;
-            }, 2000);
+            }, 3000);
           }
         });
       });
