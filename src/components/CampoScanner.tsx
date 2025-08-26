@@ -57,11 +57,11 @@ export function CampoScanner() {
     
     try {
       const photo = await addPhoto(currentBarcode, imageData);
-      setShowPhotoCamera(false);
+      // Don't close camera - keep it open for more photos
       
       toast({
         title: "Foto salva!",
-        description: `Arquivo: ${photo.fileName}`,
+        description: `Arquivo: ${photo.fileName} - Pronto para próxima foto`,
       });
     } catch (error) {
       console.error('Error saving photo:', error);
