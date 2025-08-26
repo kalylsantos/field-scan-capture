@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PhotoRecord } from '@/types/scanner';
-import { nativePhotoStorage } from '@/utils/nativePhotoStorage';
+import { NativeFileStorage } from '@/utils/nativeFileStorage';
 import { useAndroidPhotoStorage } from './useAndroidPhotoStorage';
 
 export function useNativePhotoStorage() {
@@ -8,10 +8,10 @@ export function useNativePhotoStorage() {
   const [isLoading, setIsLoading] = useState(true);
   const [storageInfo, setStorageInfo] = useState<any>(null);
   
+  const nativeStorage = new NativeFileStorage();
   const fallbackStorage = useAndroidPhotoStorage();
   
-  // Check if we're in a native environment (Capacitor)
-  const isNative = (window as any).Capacitor?.isNativePlatform() || false;
+  const isNative = NativeFileStorage.isNativeEnvironment();
 
   useEffect(() => {
     loadPhotos();
@@ -22,11 +22,12 @@ export function useNativePhotoStorage() {
     try {
       setIsLoading(true);
       if (isNative) {
-        const storedPhotos = await nativePhotoStorage.getAllPhotosMetadata();
+        const storedPhotos = await nativeStorage.getAllPhotos();
         setPhotos(storedPhotos);
       } else {
         // Use fallback storage for web - wait for it to load first
         await fallbackStorage.loadPhotos();
+        // Don't set photos here, use the return value from fallbackStorage
       }
     } catch (error) {
       console.error('Error loading photos:', error);
@@ -38,7 +39,7 @@ export function useNativePhotoStorage() {
   const loadStorageInfo = async () => {
     try {
       if (isNative) {
-        const info = await nativePhotoStorage.getStorageInfo();
+        const info = await nativeStorage.getStorageInfo();
         setStorageInfo(info);
       } else {
         setStorageInfo(fallbackStorage.storageInfo);
@@ -49,28 +50,16 @@ export function useNativePhotoStorage() {
   };
 
   const addPhoto = useCallback(async (barcode: string, imageData: string) => {
-    const now = new Date();
-    const photo: PhotoRecord = {
-      id: `${barcode}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      barcode,
-      imageData,
-      timestamp: now.toISOString(),
-      fileName: `campo_scanner_${barcode}_${now.toISOString().split('T')[0]}_${now.toTimeString().split(' ')[0].replace(/:/g, '')}.jpg`,
-      fileSize: Math.round(imageData.length * 0.75), // Estimate JPG file size
-    };
-
     try {
       if (isNative) {
-        // Save as actual JPG file using Capacitor
-        const savedPhoto = await nativePhotoStorage.savePhoto(photo);
-        setPhotos(prev => [savedPhoto, ...prev]);
+        const photo = await nativeStorage.savePhoto(barcode, imageData);
+        setPhotos(prev => [photo, ...prev]);
         loadStorageInfo();
-        return savedPhoto;
+        return photo;
       } else {
-        // Fallback to IndexedDB with proper JPG handling
-        const savedPhoto = await fallbackStorage.addPhoto(barcode, imageData);
+        const photo = await fallbackStorage.addPhoto(barcode, imageData);
         await loadPhotos(); // Reload to get updated photos
-        return savedPhoto;
+        return photo;
       }
     } catch (error) {
       console.error('Error saving photo:', error);
@@ -83,7 +72,7 @@ export function useNativePhotoStorage() {
       if (isNative) {
         const photo = photos.find(p => p.id === photoId);
         if (photo) {
-          await nativePhotoStorage.deletePhoto(photo);
+          await nativeStorage.deletePhoto(photo);
           setPhotos(prev => prev.filter(photo => photo.id !== photoId));
           loadStorageInfo();
         }
@@ -104,7 +93,7 @@ export function useNativePhotoStorage() {
   const clearAllPhotos = useCallback(async () => {
     try {
       if (isNative) {
-        await nativePhotoStorage.clearAllPhotos();
+        await nativeStorage.clearAllPhotos();
         setPhotos([]);
         loadStorageInfo();
       } else {

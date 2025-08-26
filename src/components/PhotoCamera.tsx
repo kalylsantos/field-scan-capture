@@ -135,9 +135,7 @@ export function PhotoCamera({ isOpen, onClose, onPhotoSaved, barcode }: PhotoCam
   const handleSave = () => {
     if (capturedImage) {
       onPhotoSaved(capturedImage);
-      // Clear captured image but keep camera open
-      setCapturedImage(null);
-      setError(null);
+      handleClose();
     }
   };
 
